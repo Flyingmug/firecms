@@ -24,6 +24,9 @@ import { VirtualTableHeaderRow } from "./VirtualTableHeaderRow";
 import { VirtualTableRow } from "./VirtualTableRow";
 import { VirtualTableCell } from "./VirtualTableCell";
 
+// custom
+import ParentVirtualTableRow from "../custom/Table/ParentVirtualTableRow";
+
 const VirtualListContext = createContext<VirtualTableContextProps<any>>({} as any);
 VirtualListContext.displayName = "VirtualListContext";
 
@@ -343,35 +346,66 @@ function MemoizedList({
                   cellRenderer,
                   hoverRow
               }) => {
+                
                 const rowData = data && data[index];
-                return (
-                    <VirtualTableRow
-                        key={`row_${index}`}
-                        rowData={rowData}
-                        rowIndex={index}
-                        onRowClick={onRowClick}
-                        columns={columns}
-                        hoverRow={hoverRow}
-                        style={{
-                            ...style,
-                            top: `calc(${style.top}px + 50px)`
-                        }}
-                        size={size}>
-                        {columns.map((column: TableColumn, columnIndex: number) => {
-                            const cellData = rowData && rowData[column.key];
-                            return <VirtualTableCell
-                                key={`cell_${column.key}`}
-                                dataKey={column.key}
-                                cellRenderer={cellRenderer}
-                                column={column}
-                                columns={columns}
-                                rowData={rowData}
-                                cellData={cellData}
-                                rowIndex={index}
-                                columnIndex={columnIndex}/>;
-                        })}
-                    </VirtualTableRow>
-                );
+                const variantIds = rowData.variantIds;
+
+                if (variantIds) { // add a not
+                    return (
+                        <VirtualTableRow
+                            key={`row_${index}`}
+                            rowData={rowData}
+                            rowIndex={index}
+                            onRowClick={onRowClick}
+                            columns={columns}
+                            hoverRow={hoverRow}
+                            style={{
+                                ...style,
+                                top: `calc(${style.top}px + 50px)`
+                            }}
+                            size={size}>
+                            {columns.map((column: TableColumn, columnIndex: number) => {
+                                const cellData = rowData && rowData[column.key];
+                                return <VirtualTableCell
+                                    key={`cell_${column.key}`}
+                                    dataKey={column.key}
+                                    cellRenderer={cellRenderer}
+                                    column={column}
+                                    columns={columns}
+                                    rowData={rowData}
+                                    cellData={cellData}
+                                    rowIndex={index}
+                                    columnIndex={columnIndex}/>;
+                            })}
+                        </VirtualTableRow>
+                    );
+                }
+                else {
+                    const parentRowData: any = {}; // parentsData.find...
+
+                    return (
+                        <ParentVirtualTableRow
+                            key={`row_${index}`}
+                            parentRowData={parentRowData.parent}
+                            variantsData={rowData.variants}
+                            rowIndex={index}
+                            onRowClick={onRowClick}
+                            columns={columns}
+                            hoverRow={hoverRow}
+                            style={{
+                                ...style,
+                                top: `calc(${style.top}px + 50px)`
+                            }}
+                            size={size}
+                            cellRenderer={cellRenderer}
+                            outerRef={outerRef}
+                            width={width}
+                            height={height}
+                            itemCount={itemCount}
+                            onScroll={onScroll}
+                            itemSize={itemSize}/>
+                    );
+                }
 
             }}
         </VirtualListContext.Consumer>;

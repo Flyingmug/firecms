@@ -27,7 +27,7 @@ import {
 } from "../../../../hooks";
 import { useUserConfigurationPersistence } from "../../../../hooks/useUserConfigurationPersistence";
 import { EntityCollectionViewParentsActions } from "./EntityCollectionViewParentsActions";
-import { useCustomTableController } from "../../EntityCollectionTable/useTableController";
+import { useTableController } from "../../EntityCollectionTable/useTableController";
 
 /**
  * @category Components
@@ -121,7 +121,7 @@ export const EntityCollectionViewParents = React.memo(
             setDeleteEntityClicked(undefined);
         }, [selectedEntities]);
 
-        const tableController = useCustomTableController<M>({
+        const tableController = useTableController<M>({
             fullPath,
             collection,
             entitiesDisplayedFirst: [],
