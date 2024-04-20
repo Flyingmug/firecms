@@ -10,31 +10,33 @@ import {
     PartialEntityCollection,
     Property,
     SelectionController
-} from "../../../../types";
-import { EntityCollectionTable, OnColumnResizeParams } from "../../EntityCollectionTable";
+} from "../../../types";
+import { EntityCollectionTableParents } from "../custom/EntityCollectionTableParents/EntityCollectionTableParents"
+import { OnColumnResizeParams } from "../EntityCollectionTable";
 
-import { EntityCollectionRowActions } from "../../EntityCollectionTable/internal/EntityCollectionRowActions";
-import { DeleteEntityDialog } from "../../EntityCollectionTable/internal/DeleteEntityDialog";
+import { EntityCollectionRowActions } from "../EntityCollectionTable/internal/EntityCollectionRowActions";
+import { DeleteEntityDialog } from "../EntityCollectionTable/internal/DeleteEntityDialog";
 
-import { canCreateEntity, canDeleteEntity, canEditEntity, fullPathToCollectionSegments, mergeDeep } from "../../../util";
-import { Markdown, renderSkeletonText } from "../../../../preview";
+import { canCreateEntity, canDeleteEntity, canEditEntity, fullPathToCollectionSegments, mergeDeep } from "../../util";
+import { Markdown, renderSkeletonText } from "../../../preview";
 import {
     useAuthController,
     useDataSource,
     useFireCMSContext,
     useNavigationContext,
     useSideEntityController
-} from "../../../../hooks";
-import { useUserConfigurationPersistence } from "../../../../hooks/useUserConfigurationPersistence";
+} from "../../../hooks";
+import { useUserConfigurationPersistence } from "../../../hooks/useUserConfigurationPersistence";
 import { EntityCollectionViewParentsActions } from "./EntityCollectionViewParentsActions";
-import { useTableController } from "../../EntityCollectionTable/useTableController";
+import { useTableController } from "../EntityCollectionTable/useTableController";
 
 /**
  * @category Components
  */
-export type EntityCollectionViewProps<M extends Record<string, any>> = {
+export type EntityCollectionViewParentProps<M extends Record<string, any>, S extends Record<string, any>> = {
     fullPath: string;
     isSubCollection?: boolean;
+    deepCollection: EntityCollection<S>;
 } & EntityCollection<M>;
 
 /**
@@ -62,11 +64,12 @@ export type EntityCollectionViewProps<M extends Record<string, any>> = {
  * @category Components
  */
 export const EntityCollectionViewParents = React.memo(
-    function EntityCollectionViewParents<M extends Record<string, any>>({
+    function EntityCollectionViewParents<M extends Record<string, any>, S extends Record<string, any>>({
                                                                      fullPath,
                                                                      isSubCollection,
+                                                                     deepCollection,
                                                                      ...collectionProp
-                                                                 }: EntityCollectionViewProps<M>
+                                                                 }: EntityCollectionViewParentProps<M, S>
     ) {
 
         const sideEntityController = useSideEntityController();
@@ -108,7 +111,7 @@ export const EntityCollectionViewParents = React.memo(
 
         const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
 
-        const selectionController = useSelectionController<M>();
+        const selectionController = useParentsSelectionController<M>();
         const usedSelectionController = collection.selectionController ?? selectionController;
         const {
             selectedEntities,
@@ -354,8 +357,9 @@ export const EntityCollectionViewParents = React.memo(
                 height: "100%",
                 width: "100%"
             }}>
-                <EntityCollectionTable
+                <EntityCollectionTableParents
                     key={`collection_table_${fullPath}`}
+                    deepCollection={deepCollection}
                     fullPath={fullPath}
                     tableController={tableController}
                     onSizeChanged={onSizeChanged}
@@ -392,9 +396,9 @@ export const EntityCollectionViewParents = React.memo(
 
             </Box>
         );
-    }, equal) as React.FunctionComponent<EntityCollectionViewProps<any>>
+    }, equal) as React.FunctionComponent<EntityCollectionViewParentProps<any, any>>
 
-export function useSelectionController<M extends Record<string, any>>(): SelectionController<M> {
+export function useParentsSelectionController<M extends Record<string, any>>(): SelectionController<M> {
 
     const [selectedEntities, setSelectedEntities] = useState<Entity<M>[]>([]);
 

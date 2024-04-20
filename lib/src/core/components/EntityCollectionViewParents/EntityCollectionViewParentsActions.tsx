@@ -2,10 +2,10 @@ import React from "react";
 import { Button, IconButton, Tooltip, useMediaQuery, useTheme } from "@mui/material";
 
 import { Add, Delete } from "@mui/icons-material";
-import { useFireCMSContext, useAuthController } from "../../../../hooks";
-import { EntityCollection, ExportConfig, SelectionController, Entity, CollectionActionsProps } from "../../../../types";
-import { canCreateEntity, fullPathToCollectionSegments, canDeleteEntity } from "../../../util";
-import { ExportButton } from "../../EntityCollectionTable/internal/ExportButton";
+import { useFireCMSContext, useAuthController } from "../../../hooks";
+import { EntityCollection, ExportConfig, SelectionController, Entity, CollectionActionsProps } from "../../../types";
+import { canCreateEntity, fullPathToCollectionSegments, canDeleteEntity } from "../../util";
+import { ExportButton } from "../EntityCollectionTable/internal/ExportButton";
 /* import { ExportButton } from "../EntityCollectionTable/internal/ExportButton";
 
 import { canCreateEntity, canDeleteEntity } from "../../util/permissions";

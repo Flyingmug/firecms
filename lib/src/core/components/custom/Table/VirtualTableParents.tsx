@@ -9,23 +9,24 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import { FixedSizeList as List } from "react-window";
 import useMeasure from "react-use-measure";
 
-import { CircularProgressCenter } from "../CircularProgressCenter";
+import { CircularProgressCenter } from "../../CircularProgressCenter";
 import {
     OnTableColumnResizeParams,
     TableColumn,
     TableFilterValues,
     TableWhereFilterOp,
-    VirtualTableProps
-} from "./VirtualTableProps";
+    VirtualTableParentsProps
+} from "./VirtualTableParentsProps";
 
-import { getRowHeight } from "./common";
-import { VirtualTableContextProps } from "./types";
-import { VirtualTableHeaderRow } from "./VirtualTableHeaderRow";
-import { VirtualTableRow } from "./VirtualTableRow";
-import { VirtualTableCell } from "./VirtualTableCell";
+import { getRowHeight } from "../../Table/common";
+import { VirtualTableContextProps } from "../../Table/types";
+import { VirtualTableHeaderRow } from "../../Table/VirtualTableHeaderRow";
+import { VirtualTableRow } from "../../Table/VirtualTableRow";
+import { VirtualTableCell } from "../../Table/VirtualTableCell";
 
 // custom
-import ParentVirtualTableRow from "../custom/Table/ParentVirtualTableRow";
+import { EntityCollectionView } from "../../EntityCollectionView/EntityCollectionView";
+import { EntityCollection } from "../../../../types";
 
 const VirtualListContext = createContext<VirtualTableContextProps<any>>({} as any);
 VirtualListContext.displayName = "VirtualListContext";
@@ -86,9 +87,10 @@ const innerElementType = forwardRef<HTMLDivElement, InnerElementProps>(({
  *
  * @category Components
  */
-export const VirtualTable = React.memo<VirtualTableProps<any>>(
-    function VirtualTable<T extends Record<string, any>>({
+export const VirtualTableParents = React.memo<VirtualTableParentsProps<any>>(
+    function VirtualTableParents<T extends Record<string, any>>({
                                                              data,
+                                                             deepCollection,
                                                              onResetPagination,
                                                              onEndReached,
                                                              size = "m",
@@ -106,7 +108,7 @@ export const VirtualTable = React.memo<VirtualTableProps<any>>(
                                                              cellRenderer,
                                                              hoverRow,
                                                              createFilterField
-                                                         }: VirtualTableProps<T>) {
+                                                         }: VirtualTableParentsProps<T>) {
 
         const sortByProperty: string | undefined = sortBy ? sortBy[0] : undefined;
         const currentSort: "asc" | "desc" | undefined = sortBy ? sortBy[1] : undefined;
@@ -304,7 +306,8 @@ export const VirtualTable = React.memo<VirtualTableProps<any>>(
                         height={bounds.height}
                         itemCount={data?.length ?? 0}
                         onScroll={onScroll}
-                        itemSize={getRowHeight(size)}/>
+                        itemSize={getRowHeight(size)}
+                        deepCollection={deepCollection}/>
 
                 </VirtualListContext.Provider>
             </Box>
@@ -319,7 +322,8 @@ function MemoizedList({
                           height,
                           itemCount,
                           onScroll,
-                          itemSize
+                          itemSize,
+                          deepCollection
                       }: {
     outerRef: RefObject<HTMLDivElement>;
     width: number;
@@ -331,6 +335,7 @@ function MemoizedList({
         scrollUpdateWasRequested: boolean;
     }) => void;
     itemSize: number;
+    deepCollection: EntityCollection;
 }) {
 
     const Row = useCallback(({
@@ -346,11 +351,17 @@ function MemoizedList({
                   cellRenderer,
                   hoverRow
               }) => {
-                
+
                 const rowData = data && data[index];
                 const variantIds = rowData.variantIds;
 
-                if (variantIds) { // add a not
+                if (variantIds) {
+                    return (
+                        <EntityCollectionView {...deepCollection}
+                            fullPath={"test"} />
+                    );
+                }
+                else {
                     return (
                         <VirtualTableRow
                             key={`row_${index}`}
@@ -378,32 +389,6 @@ function MemoizedList({
                                     columnIndex={columnIndex}/>;
                             })}
                         </VirtualTableRow>
-                    );
-                }
-                else {
-                    const parentRowData: any = {}; // parentsData.find...
-
-                    return (
-                        <ParentVirtualTableRow
-                            key={`row_${index}`}
-                            parentRowData={parentRowData.parent}
-                            variantsData={rowData.variants}
-                            rowIndex={index}
-                            onRowClick={onRowClick}
-                            columns={columns}
-                            hoverRow={hoverRow}
-                            style={{
-                                ...style,
-                                top: `calc(${style.top}px + 50px)`
-                            }}
-                            size={size}
-                            cellRenderer={cellRenderer}
-                            outerRef={outerRef}
-                            width={width}
-                            height={height}
-                            itemCount={itemCount}
-                            onScroll={onScroll}
-                            itemSize={itemSize}/>
                     );
                 }
 
