@@ -355,10 +355,10 @@ function MemoizedList({
                 const rowData = data && data[index];
                 const variantIds = rowData.variantIds;
 
-                if (variantIds) {
+                if (variantIds && variantIds.length > 0) {
                     return (
                         <EntityCollectionView {...deepCollection}
-                            fullPath={"test"} />
+                            fullPath={"test2"} />
                     );
                 }
                 else {

@@ -12,7 +12,6 @@ export { CircularProgressCenter } from "./CircularProgressCenter";
 export * from "./HomePage";
 export * from "./EntityCollectionView/EntityCollectionView";
 export * from "./EntityCollectionViewParents/EntityCollectionViewParents";
-
 export * from "./EntityCollectionTable";
 export * from "./CustomDialogActions";
 export * from "./BreadcrumbUpdater";

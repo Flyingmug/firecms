@@ -91,7 +91,7 @@ export const EntityCollectionViewParents = React.memo(
 
         const unselectNavigatedEntity = useCallback(() => {
             const currentSelection = selectedNavigationEntity;
-            setTimeout(() => {
+            setTimeout(() => {34444444444444444444444444444444444444444444444
                 if (currentSelection === selectedNavigationEntity)
                     setSelectedNavigationEntity(undefined);
             }, 2400);
