@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo } from "react";
 import { Box, Button, useMediaQuery, useTheme } from "@mui/material";
 import equal from "react-fast-compare";
-import { getCellAlignment, getPropertyColumnWidth, getSubcollectionColumnId } from "../../EntityCollectionTable/internal/common";
+import { getCellAlignment, getPropertyColumnWidth, getSubcollectionColumnId } from "../EntityCollectionTable/internal/common";
 import {
     AdditionalFieldDelegate,
     CollectionSize,
@@ -14,21 +14,21 @@ import {
     ResolvedProperty,
     SaveEntityProps,
     User
-} from "../../../../types";
-import { ReferencePreview, renderSkeletonText } from "../../../../preview";
-import { CustomFieldValidator } from "../../../../form/validation";
-import { PropertyTableCell } from "../../EntityCollectionTable/internal/PropertyTableCell";
-import { ErrorBoundary } from "../../ErrorBoundary";
+} from "../../../types";
+import { ReferencePreview, renderSkeletonText } from "../../../preview";
+import { CustomFieldValidator } from "../../../form/validation";
+import { PropertyTableCellParents } from "./internal/PropertyTableCellParents";
+import { ErrorBoundary } from "../ErrorBoundary";
 import {
     saveEntityWithCallbacks,
     useDataSource,
     useFireCMSContext,
     useNavigationContext,
     useSideEntityController
-} from "../../../../hooks";
-import { PopupFormField } from "../../EntityCollectionTable/internal/popup_field/PopupFormField";
-import { CellRendererParams, TableColumn } from "../../Table";
-import { VirtualTableParents } from "../Table/VirtualTableParents"
+} from "../../../hooks";
+import { PopupFormField } from "../EntityCollectionTable/internal/popup_field/PopupFormField";
+import { CellRendererParams, TableColumn, VirtualTable } from "../Table";
+import { VirtualTableParents } from "../custom/Table/VirtualTableParents"
 import {
     getIconForProperty,
     getPropertyInPath,
@@ -37,26 +37,26 @@ import {
     resolveCollection,
     resolveEnumValues,
     resolveProperty
-} from "../../../util";
-import { getRowHeight } from "../../Table/common";
-import { EntityCollectionRowActions } from "../../EntityCollectionTable/internal/EntityCollectionRowActions";
-import { EntityCollectionTableController, OnCellValueChange, SelectedCellProps, UniqueFieldValidator } from "../../EntityCollectionTable/types";
+} from "../../util";
+import { getRowHeight } from "../Table/common";
+import { EntityCollectionRowActions } from "../EntityCollectionTable/internal/EntityCollectionRowActions";
+import { EntityCollectionTableController, OnCellValueChange, SelectedCellProps, UniqueFieldValidator } from "../EntityCollectionTable/types";
 import KeyboardTabIcon from "@mui/icons-material/KeyboardTab";
 import { setIn } from "formik";
-import { CollectionTableToolbar } from "../../EntityCollectionTable/internal/CollectionTableToolbar";
+import { CollectionTableToolbar } from "../EntityCollectionTable/internal/CollectionTableToolbar";
 import { EntityCollectionTableParentsProps } from "./EntityCollectionTableParentsProps";
-import { TableCell } from "../../EntityCollectionTable/internal/TableCell";
-import { FilterFormFieldProps } from "../../Table/VirtualTableHeader";
-import { ReferenceFilterField } from "../../EntityCollectionTable/filters/ReferenceFilterField";
-import { StringNumberFilterField } from "../../EntityCollectionTable/filters/StringNumberFilterField";
-import { BooleanFilterField } from "../../EntityCollectionTable/filters/BooleanFilterField";
-import { DateTimeFilterField } from "../../EntityCollectionTable/filters/DateTimeFilterField";
+import { TableCell } from "../EntityCollectionTable/internal/TableCell";
+import { FilterFormFieldProps } from "../Table/VirtualTableHeader";
+import { ReferenceFilterField } from "../EntityCollectionTable/filters/ReferenceFilterField";
+import { StringNumberFilterField } from "../EntityCollectionTable/filters/StringNumberFilterField";
+import { BooleanFilterField } from "../EntityCollectionTable/filters/BooleanFilterField";
+import { DateTimeFilterField } from "../EntityCollectionTable/filters/DateTimeFilterField";
 
 const DEFAULT_STATE = {} as any;
 
-export const EntityCollectionTableContext = React.createContext<EntityCollectionTableController<any>>(DEFAULT_STATE);
+export const EntityCollectionTableParentsContext = React.createContext<EntityCollectionTableController<any>>(DEFAULT_STATE);
 
-export const useEntityCollectionTableController = () => useContext<EntityCollectionTableController<any>>(EntityCollectionTableContext);
+export const useEntityCollectionTableParentsController = () => useContext<EntityCollectionTableController<any>>(EntityCollectionTableParentsContext);
 
 const COLLECTION_GROUP_PARENT_ID = "collectionGroupParent";
 
@@ -323,7 +323,7 @@ export const EntityCollectionTableParents = React.memo<EntityCollectionTablePare
             return (
                 <ErrorBoundary>
                     {entity
-                        ? <PropertyTableCell
+                        ? <PropertyTableCellParents
                             key={`property_table_cell_${entity.id}_${propertyKey}`}
                             readonly={!inlineEditing}
                             align={column.align ?? "left"}
@@ -479,7 +479,7 @@ export const EntityCollectionTableParents = React.memo<EntityCollectionTablePare
 
         return (
 
-            <EntityCollectionTableContext.Provider
+            <EntityCollectionTableParentsContext.Provider
                 value={{
                     setPopupCell,
                     select,
@@ -553,7 +553,7 @@ export const EntityCollectionTableParents = React.memo<EntityCollectionTablePare
                     />
 
                 </Box>
-            </EntityCollectionTableContext.Provider>
+            </EntityCollectionTableParentsContext.Provider>
         );
 
     },

@@ -4,13 +4,9 @@ import {
     Entity,
     EntityCollection,
     SelectionController
-} from "../../../../types";
-import { TableController } from "../../EntityCollectionTable/useTableController";
-
-/**
- * @category Collection components
- */
-export type OnColumnResizeParams = { width: number, key: string };
+} from "../../../types";
+import { TableController } from "../EntityCollectionTable/useTableController";
+import { OnColumnResizeParams } from "../EntityCollectionTable/EntityCollectionTableProps";
 
 /**
  * @category Collection components

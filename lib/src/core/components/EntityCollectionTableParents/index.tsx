@@ -3,6 +3,5 @@ export {
 } from "./EntityCollectionTableParents";
 
 export type {
-    EntityCollectionTableParentsProps,
-    OnColumnResizeParams
+    EntityCollectionTableParentsProps
 } from "./EntityCollectionTableParentsProps";

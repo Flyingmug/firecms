@@ -353,12 +353,12 @@ function MemoizedList({
               }) => {
 
                 const rowData = data && data[index];
-                const variantIds = rowData.variantIds;
+                const variantsIds = rowData.values.variantsIds;
 
-                if (variantIds && variantIds.length > 0) {
+                if (variantsIds && variantsIds.length > 0) {
                     return (
                         <EntityCollectionView {...deepCollection}
-                            fullPath={"test2"} />
+                            fullPath={"products"} />
                     );
                 }
                 else {
@@ -389,6 +389,7 @@ function MemoizedList({
                                     columnIndex={columnIndex}/>;
                             })}
                         </VirtualTableRow>
+                        
                     );
                 }
 

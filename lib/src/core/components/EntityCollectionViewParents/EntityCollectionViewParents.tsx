@@ -11,8 +11,8 @@ import {
     Property,
     SelectionController
 } from "../../../types";
-import { EntityCollectionTableParents } from "../custom/EntityCollectionTableParents/EntityCollectionTableParents"
-import { OnColumnResizeParams } from "../EntityCollectionTable";
+import { EntityCollectionTableParents } from "../EntityCollectionTableParents"
+import { EntityCollectionTable, OnColumnResizeParams } from "../EntityCollectionTable";
 
 import { EntityCollectionRowActions } from "../EntityCollectionTable/internal/EntityCollectionRowActions";
 import { DeleteEntityDialog } from "../EntityCollectionTable/internal/DeleteEntityDialog";
@@ -29,14 +29,15 @@ import {
 import { useUserConfigurationPersistence } from "../../../hooks/useUserConfigurationPersistence";
 import { EntityCollectionViewParentsActions } from "./EntityCollectionViewParentsActions";
 import { useTableController } from "../EntityCollectionTable/useTableController";
+import { useSelectionController } from "../EntityCollectionView/EntityCollectionView";
 
 /**
  * @category Components
  */
-export type EntityCollectionViewParentProps<M extends Record<string, any>, S extends Record<string, any>> = {
+export type EntityCollectionViewParentProps<M extends Record<string, any>> = {
     fullPath: string;
     isSubCollection?: boolean;
-    deepCollection: EntityCollection<S>;
+    deepCollection: EntityCollection;
 } & EntityCollection<M>;
 
 /**
@@ -64,12 +65,12 @@ export type EntityCollectionViewParentProps<M extends Record<string, any>, S ext
  * @category Components
  */
 export const EntityCollectionViewParents = React.memo(
-    function EntityCollectionViewParents<M extends Record<string, any>, S extends Record<string, any>>({
+    function EntityCollectionViewParents<M extends Record<string, any>>({
                                                                      fullPath,
                                                                      isSubCollection,
                                                                      deepCollection,
                                                                      ...collectionProp
-                                                                 }: EntityCollectionViewParentProps<M, S>
+                                                                 }: EntityCollectionViewParentProps<M/* , S */>
     ) {
 
         const sideEntityController = useSideEntityController();
@@ -91,7 +92,7 @@ export const EntityCollectionViewParents = React.memo(
 
         const unselectNavigatedEntity = useCallback(() => {
             const currentSelection = selectedNavigationEntity;
-            setTimeout(() => {34444444444444444444444444444444444444444444444
+            setTimeout(() => {
                 if (currentSelection === selectedNavigationEntity)
                     setSelectedNavigationEntity(undefined);
             }, 2400);
@@ -111,7 +112,7 @@ export const EntityCollectionViewParents = React.memo(
 
         const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
 
-        const selectionController = useParentsSelectionController<M>();
+        const selectionController = useSelectionController<M>();
         const usedSelectionController = collection.selectionController ?? selectionController;
         const {
             selectedEntities,
@@ -396,31 +397,7 @@ export const EntityCollectionViewParents = React.memo(
 
             </Box>
         );
-    }, equal) as React.FunctionComponent<EntityCollectionViewParentProps<any, any>>
-
-export function useParentsSelectionController<M extends Record<string, any>>(): SelectionController<M> {
-
-    const [selectedEntities, setSelectedEntities] = useState<Entity<M>[]>([]);
-
-    const toggleEntitySelection = useCallback((entity: Entity<M>) => {
-        let newValue;
-        if (selectedEntities.map(e => e.id).includes(entity.id)) {
-            newValue = selectedEntities.filter((item: Entity<M>) => item.id !== entity.id);
-        } else {
-            newValue = [...selectedEntities, entity];
-        }
-        setSelectedEntities(newValue);
-    }, [selectedEntities]);
-
-    const isEntitySelected = useCallback((entity: Entity<M>) => selectedEntities.map(e => e.id).includes(entity.id), [selectedEntities]);
-
-    return {
-        selectedEntities,
-        setSelectedEntities,
-        isEntitySelected,
-        toggleEntitySelection
-    };
-}
+    }, equal) as React.FunctionComponent<EntityCollectionViewParentProps<any>>
 
 function EntitiesCount({
                            fullPath,
