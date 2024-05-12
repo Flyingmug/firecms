@@ -34,7 +34,7 @@ import { useSelectionController } from "../EntityCollectionView/EntityCollection
 /**
  * @category Components
  */
-export type EntityCollectionViewParentProps<M extends Record<string, any>> = {
+export type EntityCollectionViewParentsProps<M extends Record<string, any>> = {
     fullPath: string;
     isSubCollection?: boolean;
     deepCollection: EntityCollection;
@@ -70,7 +70,7 @@ export const EntityCollectionViewParents = React.memo(
                                                                      isSubCollection,
                                                                      deepCollection,
                                                                      ...collectionProp
-                                                                 }: EntityCollectionViewParentProps<M/* , S */>
+                                                                 }: EntityCollectionViewParentsProps<M/* , S */>
     ) {
 
         const sideEntityController = useSideEntityController();
@@ -397,7 +397,7 @@ export const EntityCollectionViewParents = React.memo(
 
             </Box>
         );
-    }, equal) as React.FunctionComponent<EntityCollectionViewParentProps<any>>
+    }, equal) as React.FunctionComponent<EntityCollectionViewParentsProps<any>>
 
 function EntitiesCount({
                            fullPath,

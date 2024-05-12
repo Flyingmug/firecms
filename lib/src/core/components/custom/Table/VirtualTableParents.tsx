@@ -1,12 +1,12 @@
-import React, { createContext, forwardRef, RefObject, useCallback, useEffect, useRef, useState } from "react";
+import React, { createContext, forwardRef, MutableRefObject, RefObject, useCallback, useEffect, useRef, useState } from "react";
 
 import equal from "react-fast-compare"
 
-import { Box, Typography } from "@mui/material";
+import { Box, styled, Typography } from "@mui/material";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 
 // @ts-ignore
-import { FixedSizeList as List } from "react-window";
+import { VariableSizeList as List } from "react-window";
 import useMeasure from "react-use-measure";
 
 import { CircularProgressCenter } from "../../CircularProgressCenter";
@@ -14,6 +14,7 @@ import {
     OnTableColumnResizeParams,
     TableColumn,
     TableFilterValues,
+    TableSize,
     TableWhereFilterOp,
     VirtualTableParentsProps
 } from "./VirtualTableParentsProps";
@@ -27,6 +28,7 @@ import { VirtualTableCell } from "../../Table/VirtualTableCell";
 // custom
 import { EntityCollectionView } from "../../EntityCollectionView/EntityCollectionView";
 import { EntityCollection } from "../../../../types";
+import { RowInnerTable } from "../../Table/custom/RowInnerTable";
 
 const VirtualListContext = createContext<VirtualTableContextProps<any>>({} as any);
 VirtualListContext.displayName = "VirtualListContext";
@@ -116,6 +118,7 @@ export const VirtualTableParents = React.memo<VirtualTableParentsProps<any>>(
         const [columns, setColumns] = useState(columnsProp);
 
         const tableRef = useRef<HTMLDivElement>(null);
+        const listRef = useRef<List<T>>(null);
         const endReachCallbackThreshold = useRef<number>(0);
 
         useEffect(() => {
@@ -273,6 +276,36 @@ export const VirtualTableParents = React.memo<VirtualTableParentsProps<any>>(
         const empty = !loading && (data?.length ?? 0) === 0;
         const customView = error ? buildErrorView() : (empty ? buildEmptyView() : undefined);
 
+        const [expandedItems, setExpandedItems] = useState<number[]>([]);
+        const [lastInteractedIndex, setLastInteractedIndex] = useState<number>(0);
+
+        const handleExpand = (index: number) => {
+            setLastInteractedIndex(index);
+            setExpandedItems(current => {
+                const isExpanded = current.includes(index);
+                const newExpandedItems = isExpanded
+                    ? current.filter(item => item !== index)
+                    : [...current, index];
+                return newExpandedItems;
+            });
+        };
+
+        useEffect(() => {
+            if (listRef && listRef.current) listRef.current.resetAfterIndex(lastInteractedIndex, true);
+        }, [expandedItems])
+
+        const heightEval = useCallback((index: number) => {
+            if(data) {
+                const rawData = data && data[index];
+                const { variantsIds } = rawData.values;
+
+                if(variantsIds && variantsIds.length > 0) {
+                    return expandedItems.includes(index) ? 300 : 70;
+                }
+            }
+            return getRowHeight(size);
+        }, [data, expandedItems])
+
         return (
             <Box
                 ref={measureRef}
@@ -288,6 +321,7 @@ export const VirtualTableParents = React.memo<VirtualTableParentsProps<any>>(
                         columns,
                         currentSort,
                         onRowClick,
+                        onRowExpand: handleExpand,
                         customView,
                         onColumnResize: onColumnResizeInternal,
                         onColumnResizeEnd: onColumnResizeEndInternal,
@@ -301,12 +335,15 @@ export const VirtualTableParents = React.memo<VirtualTableParentsProps<any>>(
 
                     <MemoizedList
                         outerRef={tableRef}
+                        listRef={listRef}
                         key={size}
                         width={bounds.width}
                         height={bounds.height}
                         itemCount={data?.length ?? 0}
                         onScroll={onScroll}
-                        itemSize={getRowHeight(size)}
+                        onRowExpand={handleExpand}
+                        itemSize={heightEval}
+                        estimatedItemSize={getRowHeight(size)}
                         deepCollection={deepCollection}/>
 
                 </VirtualListContext.Provider>
@@ -318,14 +355,18 @@ export const VirtualTableParents = React.memo<VirtualTableParentsProps<any>>(
 
 function MemoizedList({
                           outerRef,
+                          listRef,
                           width,
                           height,
                           itemCount,
                           onScroll,
+                          onRowExpand,
                           itemSize,
+                          estimatedItemSize,
                           deepCollection
                       }: {
     outerRef: RefObject<HTMLDivElement>;
+    listRef: MutableRefObject<List>;
     width: number;
     height: number;
     itemCount: number;
@@ -334,7 +375,9 @@ function MemoizedList({
         scrollOffset: number,
         scrollUpdateWasRequested: boolean;
     }) => void;
-    itemSize: number;
+    onRowExpand: (index: number) => void;
+    itemSize: (index: number) => number;
+    estimatedItemSize: number;
     deepCollection: EntityCollection;
 }) {
 
@@ -357,8 +400,25 @@ function MemoizedList({
 
                 if (variantsIds && variantsIds.length > 0) {
                     return (
-                        <EntityCollectionView {...deepCollection}
-                            fullPath={"products"} />
+                        <RowInnerTable
+                            key={`row_${index}`}
+                            rowData={rowData}
+                            rowIndex={index}
+                            onRowClick={onRowClick}
+                            columns={columns}
+                            hoverRow={hoverRow}
+                            style={{
+                                ...style,
+                                top: `calc(${style.top}px + 50px)`
+                            }}
+                            size={300}>
+                            <EntityCollectionView
+                                {...deepCollection}
+                                fullPath={"products"}
+                                isVariants
+                                onRowExpand={onRowExpand}
+                                rowIndex={index} />
+                        </RowInnerTable>
                     );
                 }
                 else {
@@ -398,6 +458,7 @@ function MemoizedList({
     }, []);
 
     return <List
+        ref={listRef}
         outerRef={outerRef}
         innerElementType={innerElementType}
         width={width}
@@ -405,7 +466,8 @@ function MemoizedList({
         overscanCount={4}
         itemCount={itemCount}
         onScroll={onScroll}
-        itemSize={itemSize}>
+        itemSize={itemSize}
+        estimatedItemSize={estimatedItemSize}>
         {Row}
     </List>;
 }
