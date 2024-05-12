@@ -20,6 +20,17 @@ export type VirtualTableRowProps<T> = {
     hoverRow?: boolean;
 };
 
+export type RowInnerTableProps<T> = {
+    style: any,
+    size: number,
+    rowData: T;
+    rowIndex: number;
+    onRowClick?: (props: OnRowClickParams<any>) => void;
+    children: React.ReactNode;
+    columns: TableColumn[];
+    hoverRow?: boolean;
+}
+
 export type VirtualTableContextProps<T extends any> = {
     data?: T[];
     size?: TableSize,
@@ -28,6 +39,7 @@ export type VirtualTableContextProps<T extends any> = {
     currentSort: "asc" | "desc" | undefined;
     filter?: TableFilterValues<any>;
     onRowClick?: (props: OnRowClickParams<any>) => void;
+    onRowExpand?: (index: number) => void;
     onColumnSort: (key: string) => any;
     onColumnResize: (params: OnTableColumnResizeParams) => void;
     onColumnResizeEnd: (params: OnTableColumnResizeParams) => void;

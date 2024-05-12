@@ -28,6 +28,7 @@ import {
 import { useUserConfigurationPersistence } from "../../../hooks/useUserConfigurationPersistence";
 import { EntityCollectionViewActions } from "./EntityCollectionViewActions";
 import { useTableController } from "../EntityCollectionTable/useTableController";
+import { EntityCollectionTableVariants } from "../EntityCollectionTableVariants";
 
 /**
  * @category Components
@@ -35,6 +36,9 @@ import { useTableController } from "../EntityCollectionTable/useTableController"
 export type EntityCollectionViewProps<M extends Record<string, any>> = {
     fullPath: string;
     isSubCollection?: boolean;
+    isVariants?: boolean;
+    onRowExpand?: (index: number) => void;
+    rowIndex?: number;
 } & EntityCollection<M>;
 
 /**
@@ -65,6 +69,9 @@ export const EntityCollectionView = React.memo(
     function EntityCollectionView<M extends Record<string, any>>({
                                                                      fullPath,
                                                                      isSubCollection,
+                                                                     isVariants,
+                                                                     onRowExpand,
+                                                                     rowIndex,
                                                                      ...collectionProp
                                                                  }: EntityCollectionViewProps<M>
     ) {
@@ -241,7 +248,7 @@ export const EntityCollectionView = React.memo(
                         }
                         : undefined}
                 >
-                    {`${collection.name}`}
+                    {isVariants ? 'Variants' : `${collection.name}`}
                 </Typography>
 
                 <EntitiesCount
@@ -348,13 +355,45 @@ export const EntityCollectionView = React.memo(
 
         }, [isEntitySelected, collection, authController, fullPath, selectionEnabled, toggleEntitySelection, onEditClicked, createEnabled, onCopyClicked]);
 
+        const rowExpansionHandler = useCallback(() => {
+            onRowExpand && rowIndex != undefined
+            ? onRowExpand(rowIndex)
+            : undefined;
+        }, [onRowExpand, rowIndex]);
+
         return (
             <Box sx={{
                 overflow: "hidden",
                 height: "100%",
                 width: "100%"
             }}>
-                <EntityCollectionTable
+                {isVariants ? 
+                  <EntityCollectionTableVariants
+                    key={`collection_table_${fullPath}`}
+                    fullPath={fullPath}
+                    tableController={tableController}
+                    onSizeChanged={onSizeChanged}
+                    onEntityClick={onEntityClick}
+                    onColumnResize={onColumnResize}
+                    onRowExpand={rowExpansionHandler}
+                    tableRowActionsBuilder={tableRowActionsBuilder}
+                    title={Title}
+                    selectionController={usedSelectionController}
+                    highlightedEntities={selectedNavigationEntity ? [selectedNavigationEntity] : []}
+                    {...collection}
+                    actions={<EntityCollectionViewActions
+                        collection={collection}
+                        exportable={exportable}
+                        onMultipleDeleteClick={onMultipleDeleteClick}
+                        onNewClick={onNewClick}
+                        path={fullPath}
+                        loadedEntities={tableController.data}
+                        selectionController={usedSelectionController}
+                        selectionEnabled={selectionEnabled}/>}
+                    hoverRow={hoverRow}
+                    inlineEditing={checkInlineEditing()}
+                />
+                : <EntityCollectionTable
                     key={`collection_table_${fullPath}`}
                     fullPath={fullPath}
                     tableController={tableController}
@@ -377,7 +416,8 @@ export const EntityCollectionView = React.memo(
                         selectionEnabled={selectionEnabled}/>}
                     hoverRow={hoverRow}
                     inlineEditing={checkInlineEditing()}
-                />
+                />}
+                
 
                 {deleteEntityClicked &&
                     <DeleteEntityDialog
