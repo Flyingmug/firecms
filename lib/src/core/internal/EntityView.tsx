@@ -25,6 +25,7 @@ import { EntityForm } from "../../form";
 import { useSideDialogContext } from "../SideDialogs";
 import { useLargeSideLayout } from "./useLargeSideLayout";
 import { EntityFormSaveParams } from "../../form/EntityForm";
+import { ProductEntityFormPage } from "../../form/ProductEntityFormPage";
 
 export interface EntityViewProps<M extends Record<string, any>> {
     path: string;
@@ -485,10 +486,32 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
         return <ErrorBoundary>{form}</ErrorBoundary>;
     }
 
+    function buildMultiPageForm() {
+        console.log('|CUSTOM FORM FLAG DETECTED|');
+        let form = <ProductEntityFormPage
+            status={status}
+            path={path}
+            collection={collection}
+            onEntitySaveRequested={onSaveEntityRequest}
+            onDiscard={onDiscard}
+            onValuesChanged={onValuesChanged}
+            onModified={onModified}
+            entity={usedEntity}
+            onIdChange={onIdChange}
+            onFormContextChange={setFormContext}
+            hideId={collection.hideIdFromForm}
+            autoSave={autoSave}
+            onIdUpdateError={onIdUpdateError}
+        />;
+        return <ErrorBoundary>{form}</ErrorBoundary>;
+    }
+    
     const form = (readOnly === undefined)
         ? <></>
         : (!readOnly
-            ? buildForm()
+            ? (collection.hasProductSchema
+                ? buildMultiPageForm()
+                : buildForm())
             : (
                 <EntityPreview
                     entity={usedEntity as Entity<M>}
@@ -618,10 +641,10 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
                         flexDirection: "row"
                     }}>
 
-                        <Box sx={{
+                        {/* <Box sx={{
                             position: "relative",
-                            maxWidth: "100%"
-                        }}>
+                            maxWidth: "100%",
+                        }}> */}
                             <Box
                                 role="tabpanel"
                                 hidden={!mainViewVisible}
@@ -642,7 +665,32 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
                                     : form}
 
                             </Box>
-                        </Box>
+                        {/* </Box> */}
+                        {/* <Box sx={{
+                            position: "relative",
+                            maxWidth: "100%"
+                        }}> */}
+                            <Box
+                                role="tabpanel"
+                                hidden={!mainViewVisible}
+                                id={`form_${path}_2`}
+                                sx={{
+                                    width: resolvedFormWidth,
+                                    maxWidth: "100%",
+                                    height: "100%",
+                                    overflow: "auto",
+                                    [theme.breakpoints.down("sm")]: {
+                                        maxWidth: CONTAINER_FULL_WIDTH,
+                                        width: CONTAINER_FULL_WIDTH
+                                    }
+                                }}>
+
+                                {globalLoading
+                                    ? <CircularProgressCenter/>
+                                    : form}
+
+                            </Box>
+                        {/* </Box> */}
 
                         {customViewsView}
 

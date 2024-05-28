@@ -42,5 +42,8 @@ export type { EntityFormProps } from "./EntityForm";
 export {
     EntityForm
 } from "./EntityForm";
+export {
+    ProductEntityFormPage
+} from "./ProductEntityFormPage";
 
 export { PropertyFieldBinding } from "./PropertyFieldBinding";

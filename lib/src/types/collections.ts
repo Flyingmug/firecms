@@ -255,6 +255,8 @@ export interface EntityCollection<M extends Record<string, any> = any,
      */
     formAutoSave?: boolean;
 
+    hasProductSchema?: boolean;
+
 }
 
 /**
