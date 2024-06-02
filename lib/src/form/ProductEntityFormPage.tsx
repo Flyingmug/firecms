@@ -88,6 +88,7 @@ export interface ProductEntityFormPageProps<M extends Record<string, any>> {
 
     onIdUpdateError?: (error: any) => void;
 
+    currentTabIndex: number | undefined;
 }
 
 
@@ -118,6 +119,7 @@ export const ProductEntityFormPage = React.memo<ProductEntityFormPageProps<any>>
     (a: ProductEntityFormPageProps<any>, b: ProductEntityFormPageProps<any>) => {
         return a.status === b.status &&
             a.path === b.path &&
+            a.currentTabIndex === b.currentTabIndex && /* test */
             equal(a.entity?.values, b.entity?.values);
     }) as typeof EntityFormInternal;
 
@@ -134,7 +136,8 @@ function EntityFormInternal<M extends Record<string, any>>({
                                                                onFormContextChange,
                                                                hideId,
                                                                autoSave,
-                                                               onIdUpdateError
+                                                               onIdUpdateError,
+                                                               currentTabIndex
                                                            }: ProductEntityFormPageProps<M>) {
     const context = useFireCMSContext();
     const dataSource = useDataSource();
@@ -377,6 +380,25 @@ function EntityFormInternal<M extends Record<string, any>>({
                     )).filter(Boolean));
                 }
 
+                function buildInnerParamForm(usedFields: string[]) {
+                    return entityId
+                ? <InnerForm
+                    {...props}
+                    initialValues={initialValues}
+                    onModified={onModified}
+                    onValuesChanged={doOnValuesChanges}
+                    underlyingChanges={underlyingChanges}
+                    entity={entity}
+                    collection={collection}
+                    formContext={formContext}
+                    status={status}
+                    savingError={savingError}
+                    closeAfterSaveRef={closeAfterSaveRef}
+                    autoSave={autoSave}
+                    fieldKeys={usedFields}/>
+                : undefined;
+                }
+
                 return <>
 
                     <Box
@@ -397,80 +419,101 @@ function EntityFormInternal<M extends Record<string, any>>({
                             }
                         })}
                     >
+                        {collection.additionalFormViews && collection.additionalFormViews.map(
+                            (formPageView, pageIndex) => {
 
-                        {pluginActions.length > 0 && <Box
-                            sx={(theme) => ({
-                                width: "100%",
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                background: theme.palette.mode === "light" ? "rgba(255,255,255,0.6)" : alpha(theme.palette.background.paper, 0.1),
-                                backdropFilter: "blur(8px)",
-                                borderBottom: `1px solid ${theme.palette.divider}`,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                left: 0,
-                                textAlign: "right",
-                                zIndex: 2,
-                                "& > *:not(:last-child)": {
-                                    [theme.breakpoints.down("md")]: {
-                                        mr: theme.spacing(1)
-                                    },
-                                    mr: theme.spacing(2)
-                                }
-                            })}>
-                            {pluginActions}
-                        </Box>}
+                            function buildFormPageComponent() {
+                                return (
+                                    <Box>
+                                        <formPageView.Builder formItem={buildInnerParamForm(formPageView.usedFields)} />
+                                    </Box>
+                                )
+                            }
 
-                        <Box
-                            sx={(theme) => ({
-                                width: "100%",
-                                marginTop: theme.spacing(4 + (pluginActions ? 4 : 0)),
-                                paddingY: 2,
-                                display: "flex",
-                                alignItems: "center",
-                                [theme.breakpoints.down("lg")]: {
-                                    marginTop: theme.spacing(3 + (pluginActions ? 4 : 0))
-                                },
-                                [theme.breakpoints.down("md")]: {
-                                    marginTop: theme.spacing(2 + (pluginActions ? 4 : 0))
-                                }
-                            })}>
+                            const formPageViewComponent = buildFormPageComponent();
 
-                            <Typography
-                                sx={{
-                                    marginTop: 4,
-                                    marginBottom: collection.hideIdFromForm ? 0 : 4,
-                                    flexGrow: 1
-                                }}
-                                variant={"h4"}>{collection.singularName ?? collection.name + " entry"}
-                            </Typography>
-                        </Box>
+                            return (
+                                <Box
+                                    key={`inner_form_view_${[pageIndex]}`}
+                                    hidden={currentTabIndex !== pageIndex}>
+                                    {pluginActions.length > 0 && <Box
+                                        sx={(theme) => ({
+                                            width: "100%",
+                                            display: "flex",
+                                            justifyContent: "flex-end",
+                                            background: theme.palette.mode === "light" ? "rgba(255,255,255,0.6)" : alpha(theme.palette.background.paper, 0.1),
+                                            backdropFilter: "blur(8px)",
+                                            borderBottom: `1px solid ${theme.palette.divider}`,
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            position: "absolute",
+                                            top: 0,
+                                            right: 0,
+                                            left: 0,
+                                            textAlign: "right",
+                                            zIndex: 2,
+                                            "& > *:not(:last-child)": {
+                                                [theme.breakpoints.down("md")]: {
+                                                    mr: theme.spacing(1)
+                                                },
+                                                mr: theme.spacing(2)
+                                            }
+                                        })}>
+                                        {pluginActions}
+                                    </Box>}
 
-                        {!hideId &&
-                            <CustomIdField customId={collection.customId}
-                                           entityId={entityId}
-                                           status={status}
-                                           onChange={setEntityId}
-                                           error={entityIdError}
-                                           entity={entity}/>}
+                                    {formPageViewComponent}
 
-                        {entityId && <InnerForm
-                            {...props}
-                            initialValues={initialValues}
-                            onModified={onModified}
-                            onValuesChanged={doOnValuesChanges}
-                            underlyingChanges={underlyingChanges}
-                            entity={entity}
-                            collection={collection}
-                            formContext={formContext}
-                            status={status}
-                            savingError={savingError}
-                            closeAfterSaveRef={closeAfterSaveRef}
-                            autoSave={autoSave}/>}
+                                    {/* <Box
+                                        sx={(theme) => ({
+                                            width: "100%",
+                                            marginTop: theme.spacing(4 + (pluginActions ? 4 : 0)),
+                                            paddingY: 2,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            [theme.breakpoints.down("lg")]: {
+                                                marginTop: theme.spacing(3 + (pluginActions ? 4 : 0))
+                                            },
+                                            [theme.breakpoints.down("md")]: {
+                                                marginTop: theme.spacing(2 + (pluginActions ? 4 : 0))
+                                            }
+                                        })}>
 
+                                        <Typography
+                                            sx={{
+                                                marginTop: 4,
+                                                marginBottom: collection.hideIdFromForm ? 0 : 4,
+                                                flexGrow: 1
+                                            }}
+                                            variant={"h4"}>{collection.singularName ?? collection.name + " entry"}
+                                        </Typography>
+                                    </Box> */}
+
+                                    {/* {!hideId &&
+                                        <CustomIdField customId={collection.customId}
+                                                    entityId={entityId}
+                                                    status={status}
+                                                    onChange={setEntityId}
+                                                    error={entityIdError}
+                                                    entity={entity}/>} */}
+
+                                    {/* {entityId && <InnerForm
+                                        {...props}
+                                        initialValues={initialValues}
+                                        onModified={onModified}
+                                        onValuesChanged={doOnValuesChanges}
+                                        underlyingChanges={underlyingChanges}
+                                        entity={entity}
+                                        collection={collection}
+                                        formContext={formContext}
+                                        status={status}
+                                        savingError={savingError}
+                                        closeAfterSaveRef={closeAfterSaveRef}
+                                        autoSave={autoSave}/>} */}
+                                </Box>
+                                )
+                            }
+                        )}
                     </Box>
                 </>
             }}
@@ -488,7 +531,8 @@ function InnerForm<M extends Record<string, any>>(props: FormikProps<M> & {
     status: "new" | "existing" | "copy",
     savingError?: Error,
     closeAfterSaveRef: MutableRefObject<boolean>,
-    autoSave?: boolean
+    autoSave?: boolean,
+    fieldKeys?: string[]
 }) {
 
     const {
@@ -508,6 +552,7 @@ function InnerForm<M extends Record<string, any>>(props: FormikProps<M> & {
         dirty,
         closeAfterSaveRef,
         autoSave,
+        fieldKeys
     } = props;
 
     const modified = dirty;
@@ -535,6 +580,7 @@ function InnerForm<M extends Record<string, any>>(props: FormikProps<M> & {
     const formFields = (
         <Grid container spacing={6}>
             {Object.entries(collection.properties)
+                .filter(([key]) => !fieldKeys || fieldKeys.includes(key))
                 .map(([key, property]) => {
 
                     const underlyingValueHasChanged: boolean =
@@ -578,7 +624,7 @@ function InnerForm<M extends Record<string, any>>(props: FormikProps<M> & {
 
         <Form onSubmit={handleSubmit}
               noValidate>
-            <Box sx={{ mt: 4 }}
+            <Box /* sx={{ mt: 4 }} */
                  ref={formRef}>
 
                 {formFields}
@@ -587,7 +633,7 @@ function InnerForm<M extends Record<string, any>>(props: FormikProps<M> & {
 
             </Box>
 
-            <Box sx={{ height: 56 }}/>
+            {/* <Box sx={{ height: 56 }}/> */}
 
             {!autoSave && <CustomDialogActions position={"absolute"}>
 

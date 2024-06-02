@@ -7,6 +7,7 @@ import { useNavigationContext, useSideEntityController } from "../hooks";
 import { ErrorBoundary } from "./components";
 import { EntityView } from "./internal/EntityView";
 import { useSideDialogContext } from "./SideDialogs";
+import { ProductEntityView } from "./internal/ProductEntityView";
 
 /**
  * This is the component in charge of rendering the side dialog used
@@ -69,16 +70,25 @@ export function EntitySidePanel(props: EntitySidePanelProps) {
         return <div style={{ width: FORM_CONTAINER_WIDTH }}/>;
     }
 
+    const hasAdditionalFormPages = collection.additionalFormViews && collection.additionalFormViews.length > 0;
+
     return (
         <>
 
             <ErrorBoundary>
-                <EntityView
+                {hasAdditionalFormPages
+                ? <ProductEntityView
                     {...props}
                     formWidth={props.width}
                     collection={collection}
                     onValuesAreModified={onValuesAreModified}
                 />
+                : <EntityView
+                    {...props}
+                    formWidth={props.width}
+                    collection={collection}
+                    onValuesAreModified={onValuesAreModified}
+                />}
             </ErrorBoundary>
 
         </>

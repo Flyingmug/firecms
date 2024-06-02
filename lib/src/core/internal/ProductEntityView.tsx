@@ -23,7 +23,6 @@ import {
 } from "../../hooks";
 import { EntityForm } from "../../form";
 import { useSideDialogContext } from "../SideDialogs";
-import { useLargeSideLayout } from "./useLargeSideLayout";
 import { EntityFormSaveParams } from "../../form/EntityForm";
 import { ProductEntityFormPage } from "../../form/ProductEntityFormPage";
 
@@ -45,7 +44,7 @@ export interface EntityViewProps<M extends Record<string, any>> {
  * You probably don't want to use this view directly since it is bound to the
  * side panel. Instead, you might want to use {@link EntityForm} or {@link EntityCollectionView}
  */
-export function EntityView<M extends Record<string, any>, UserType extends User>({
+export function ProductEntityView<M extends Record<string, any>, UserType extends User>({
                                                                                      path,
                                                                                      entityId,
                                                                                      selectedSubPath,
@@ -79,10 +78,8 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
     }, false, 2000);
 
     const theme = useTheme();
-    const largeLayout = useLargeSideLayout();
-    const largeLayoutTabSelected = useRef(!largeLayout);
 
-    const resolvedFormWidth: string = typeof formWidth === "number" ? `${formWidth}px` : formWidth ?? FORM_CONTAINER_WIDTH;
+    const resolvedFormWidth: string = typeof formWidth === "number" ? `${formWidth}px` : formWidth ?? CONTAINER_FULL_WIDTH;
 
     const dataSource = useDataSource();
     const sideDialogContext = useSideDialogContext();
@@ -120,8 +117,10 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
             if (index !== -1)
                 return index + customViewsCount;
         }
-        return -1;
+        return 0;
     };
+
+    const hasAdditionalFormPages = collection.additionalFormViews && collection.additionalFormViews.length > 0;
 
     const hasAdditionalViews = customViewsCount > 0 || subcollectionsCount > 0;
 
@@ -133,9 +132,13 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
         }
     );
 
-    const tabsPositionRef = useRef<number>(defaultSelectedView ? getTabPositionFromPath(defaultSelectedView) : -1);
+    const tabsPositionRef = useRef<number>(defaultSelectedView ? getTabPositionFromPath(defaultSelectedView) : 0);
 
-    const mainViewVisible = tabsPositionRef.current === -1 || largeLayout;
+    const formViews = collection.additionalFormViews;
+    const formViewsCount = formViews?.length ?? 0;
+    const hasAdditionalFormViews = formViewsCount > 0;
+
+    const mainViewVisible = tabsPositionRef.current < formViewsCount;
 
     const {
         entity,
@@ -168,8 +171,6 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
     }, [authController, usedEntity, status]);
 
     useEffect(() => {
-        if (largeLayoutTabSelected.current === largeLayout)
-            return;
         // open first tab by default in large layouts
         if (selectedSubPath !== defaultSelectedView) {
             sideEntityController.replace({
@@ -180,8 +181,7 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
                 collection
             });
         }
-        largeLayoutTabSelected.current = largeLayout;
-    }, [defaultSelectedView, largeLayout, selectedSubPath]);
+    }, [defaultSelectedView, selectedSubPath]);
 
     const onPreSaveHookError = useCallback((e: Error) => {
         setSaving(false);
@@ -202,16 +202,13 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
     }, [snackbarController]);
 
     const getSelectedSubPath = (value: number) => {
-        if (value === -1) return undefined;
-
-        if (customViews && value < customViewsCount) {
-            return customViews[value].path;
+        if (value > -1 && value < formViewsCount) return undefined;
+        if (customViews && (value < customViewsCount + formViewsCount && value >= formViewsCount)) {
+            return customViews[value - formViewsCount].path;
         }
-
         if (subcollections) {
-            return subcollections[value - customViewsCount].path;
+            return subcollections[value - customViewsCount - formViewsCount].path;
         }
-
         throw Error("Something is wrong in getSelectedSubPath");
     };
 
@@ -313,7 +310,7 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
 
     const customViewsView: React.ReactNode[] | undefined = customViews && customViews.map(
         (customView, colIndex) => {
-            if (tabsPositionRef.current !== colIndex)
+            if (tabsPositionRef.current !== (colIndex + formViewsCount))
                 return null;
             if (customView.builder) {
                 console.warn("customView.builder is deprecated, use customView.Builder instead", customView);
@@ -357,7 +354,7 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
     const subCollectionsViews = subcollections && subcollections.map(
         (subcollection, colIndex) => {
             const fullPath = usedEntity ? `${path}/${usedEntity?.id}/${removeInitialAndTrailingSlashes(subcollection.alias ?? subcollection.path)}` : undefined;
-            if (tabsPositionRef.current !== colIndex + customViewsCount)
+            if (tabsPositionRef.current !== colIndex + formViewsCount + customViewsCount)
                 return null;
             return (
                 <Box
@@ -486,15 +483,50 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
         return <ErrorBoundary>{form}</ErrorBoundary>;
     }
 
+    function buildMultiPageForm() {
+        let form = <ProductEntityFormPage
+            status={status}
+            path={path}
+            collection={collection}
+            onEntitySaveRequested={onSaveEntityRequest}
+            onDiscard={onDiscard}
+            onValuesChanged={onValuesChanged}
+            onModified={onModified}
+            entity={usedEntity}
+            onIdChange={onIdChange}
+            onFormContextChange={setFormContext}
+            hideId={collection.hideIdFromForm}
+            autoSave={autoSave}
+            onIdUpdateError={onIdUpdateError}
+            currentTabIndex={tabsPositionRef.current} /* temp */
+        />;
+        return <ErrorBoundary>{form}</ErrorBoundary>;
+    }
+
     const form = (readOnly === undefined)
         ? <></>
-        : (!readOnly 
-            ? buildForm()
-            : <EntityPreview
+        : (!readOnly
+            ? (hasAdditionalFormPages
+                ? buildMultiPageForm()
+                : buildForm())
+            : (
+                <EntityPreview
                     entity={usedEntity as Entity<M>}
                     path={path}
                     collection={collection}/>
-        );
+            ));
+
+    const formTabs = formViews && formViews.map(
+        (formView) =>
+            <Tab
+                sx={{
+                    fontSize: "0.875rem",
+                    minWidth: "140px"
+                }}
+                wrapped={true}
+                key={`entity_detail_form_tab_${formView.name}`}
+                label={formView.name}/>
+    );
 
     const subcollectionTabs = subcollections && subcollections.map(
         (subcollection) =>
@@ -554,11 +586,11 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
             </Box>}
 
             <Tabs
-                value={tabsPositionRef.current + 1}
+                value={tabsPositionRef.current}
                 indicatorColor="secondary"
                 textColor="inherit"
                 onChange={(ev, value) => {
-                    onSideTabClick(value - 1);
+                    onSideTabClick(value);
                 }}
                 sx={{
                     paddingLeft: theme.spacing(1),
@@ -568,7 +600,7 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
                 variant="scrollable"
                 scrollButtons="auto"
             >
-                <Tab
+                {/* <Tab
                     label={collection.singularName ?? collection.name}
                     disabled={!hasAdditionalViews}
                     onClick={() => {
@@ -580,7 +612,8 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
                         minWidth: "140px"
                     }}
                     wrapped={true}
-                />
+                /> */}
+                {formTabs}
                 {customViewTabs}
                 {subcollectionTabs}
 
@@ -620,7 +653,7 @@ export function EntityView<M extends Record<string, any>, UserType extends User>
 
                         <Box sx={{
                             position: "relative",
-                            maxWidth: "100%",
+                            maxWidth: "100%"
                         }}>
                             <Box
                                 role="tabpanel"

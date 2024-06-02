@@ -65,6 +65,11 @@ export interface EntitySidePanelProps<M extends Record<string, any> = any> {
      */
     closeOnSave?: boolean;
 
+    /**
+     * Does the form have customized pages
+     */
+    hasFormPages?: boolean;
+
 }
 
 /**

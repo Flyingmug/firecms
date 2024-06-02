@@ -27,7 +27,8 @@ import {
 const NEW_URL_HASH = "new";
 
 export function getEntityViewWidth(props: EntitySidePanelProps<any>, small: boolean): string {
-    if (small) return CONTAINER_FULL_WIDTH;
+    const hasAdditionalFormViews = props.collection?.additionalFormViews && props.collection.additionalFormViews.length > 0;
+    if (small || hasAdditionalFormViews) return CONTAINER_FULL_WIDTH;
     const mainViewSelected = !props.selectedSubPath;
     const resolvedWidth: string | undefined = typeof props.width === "number" ? `${props.width}px` : props.width;
     return !mainViewSelected ? `calc(${ADDITIONAL_TAB_WIDTH} + ${resolvedWidth ?? FORM_CONTAINER_WIDTH})` : resolvedWidth ?? FORM_CONTAINER_WIDTH
@@ -113,11 +114,11 @@ export function buildSidePanelsFromUrl(path: string, collections: EntityCollecti
             const previousEntry = navigationViewsForPath[i - 1];
             if (navigationEntry.type === "entity") {
                 sidePanels.push({
-                        path: navigationEntry.path,
-                        entityId: navigationEntry.entityId,
-                        copy: false
-                    }
-                );
+                    path: navigationEntry.path,
+                    entityId: navigationEntry.entityId,
+                    copy: false,
+                    collection: navigationEntry.parentCollection
+                });
             } else if (navigationEntry.type === "custom_view") {
                 if (previousEntry.type === "entity") {
                     const lastSidePanel: EntitySidePanelProps<any> = sidePanels[sidePanels.length - 1];

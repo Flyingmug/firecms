@@ -6,6 +6,7 @@ import { EntityCallbacks } from "./entity_callbacks";
 import { Permissions, PermissionsBuilder } from "./permissions";
 import { EnumValues, PropertiesOrBuilders } from "./properties";
 import { FormContext } from "./fields";
+import { EmotionJSX } from "@emotion/react/types/jsx-namespace";
 
 /**
  * This interface represents a view that includes a collection of entities.
@@ -255,8 +256,7 @@ export interface EntityCollection<M extends Record<string, any> = any,
      */
     formAutoSave?: boolean;
 
-    hasProductSchema?: boolean;
-
+    additionalFormViews?: EntityFormCustomView[]; // bro will fix it after he does all the stuff
 }
 
 /**
@@ -475,6 +475,36 @@ export interface EntityCustomViewParams<M extends Record<string, any> = any> {
      * Use the form context to access the form state and methods
      */
     formContext: FormContext;
+}
+
+/**
+ * Used to customize the entity's relative form
+ */
+export type EntityFormCustomView =
+    {
+
+        /**
+         * Name of the form's page
+         */
+        name: string;
+
+        /**
+         * Entity fields that are to be used in this form page
+         */
+        usedFields: string[];
+
+        /**
+         * Component to be rendered in the form's page
+         */
+        Builder: React.ComponentType<internalFormPageViewParams>;
+    }
+
+/**
+ * Field component element used within the {@link EntityFormCustomView} to make
+ * the pre-defined fields modifiable
+ */
+export interface internalFormPageViewParams/* <M extends Record<string, any> = any> */ {
+    formItem: EmotionJSX.Element | undefined;
 }
 
 export type InferCollectionType<S extends EntityCollection> = S extends EntityCollection<infer M> ? M : never;

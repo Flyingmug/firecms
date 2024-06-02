@@ -137,7 +137,7 @@ export const EntityCollectionView = React.memo(
             return sideEntityController.open({
                 entityId: clickedEntity.id,
                 path: clickedEntity.path,
-                /* collection, */
+                collection,
                 updateUrl: true,
                 onClose: unselectNavigatedEntity
             });
@@ -149,7 +149,7 @@ export const EntityCollectionView = React.memo(
             });
             sideEntityController.open({
                 path: fullPath,
-                /* collection, */
+                collection,
                 updateUrl: true,
                 onClose: unselectNavigatedEntity
             });
@@ -293,7 +293,7 @@ export const EntityCollectionView = React.memo(
                 entityId: clickedEntity.id,
                 path: fullPath,
                 copy: true,
-                /* collection, */
+                collection,
                 updateUrl: true,
                 onClose: unselectNavigatedEntity
             });
@@ -308,7 +308,7 @@ export const EntityCollectionView = React.memo(
             sideEntityController.open({
                 entityId: clickedEntity.id,
                 path: clickedEntity.path,
-                /* collection, */
+                collection,
                 updateUrl: true,
                 onClose: unselectNavigatedEntity
             });
