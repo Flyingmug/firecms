@@ -3,6 +3,7 @@ import { Entity, EntityCollection, FilterValues, FireCMSContext, User } from "..
 import { useDataSource } from "./useDataSource";
 import { useNavigationContext } from "../useNavigationContext";
 import { useFireCMSContext } from "../useFireCMSContext";
+import { verify } from "crypto";
 
 /**
  * @category Hooks and utilities
@@ -38,6 +39,11 @@ export interface CollectionFetchProps<M extends Record<string, any>> {
      * Search string
      */
     searchString?: string;
+
+    /**
+     * Id of the product relation
+     */
+    sellerId?: string;
 }
 
 /**
@@ -67,7 +73,8 @@ export function useCollectionFetch<M extends Record<string, any>, UserType exten
         filterValues,
         sortBy,
         itemCount,
-        searchString
+        searchString,
+        sellerId
     }: CollectionFetchProps<M>): CollectionFetchResult<M> {
 
     const dataSource = useDataSource();
@@ -121,6 +128,13 @@ export function useCollectionFetch<M extends Record<string, any>, UserType exten
             setDataLoadingError(error);
         };
 
+        console.log("|TRG-ID-DEEP| id", sellerId);
+        const verifyCollection = collection.verifyCollection;
+
+        if (verifyCollection && !sellerId) return;
+
+        const relationId = verifyCollection && sellerId ? sellerId : undefined;
+
         if (dataSource.listenCollection) {
             return dataSource.listenCollection<M>({
                 path,
@@ -132,7 +146,8 @@ export function useCollectionFetch<M extends Record<string, any>, UserType exten
                 limit: itemCount,
                 startAfter: undefined,
                 orderBy: sortByProperty,
-                order: currentSort
+                order: currentSort,
+                relationId
             });
         } else {
             dataSource.fetchCollection<M>({
@@ -150,7 +165,7 @@ export function useCollectionFetch<M extends Record<string, any>, UserType exten
             return () => {
             };
         }
-    }, [path, itemCount, currentSort, sortByProperty, filterValues, searchString]);
+    }, [path, itemCount, currentSort, sortByProperty, filterValues, searchString, sellerId]);
 
     return {
         data,

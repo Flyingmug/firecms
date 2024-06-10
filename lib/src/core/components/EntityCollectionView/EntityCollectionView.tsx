@@ -212,6 +212,14 @@ export const EntityCollectionView = React.memo(
 
         const open = anchorEl != null;
 
+        const [sellerId, setSellerId] = useState<string>();
+
+        useEffect(() => {
+            if (collection.verifyCollection) {
+                setSellerId(authController.extra?.sellerId);
+            }
+        }, [collection, authController]);
+
         const Title = <Box sx={{
             display: "flex",
             flexDirection: "row",
@@ -249,6 +257,7 @@ export const EntityCollectionView = React.memo(
                     collection={collection}
                     filter={tableController.filterValues}
                     sortBy={tableController.sortBy}
+                    sellerId={sellerId}
                 />
 
                 {collection.description &&
@@ -422,12 +431,14 @@ function EntitiesCount({
                            fullPath,
                            collection,
                            filter,
-                           sortBy
+                           sortBy,
+                           sellerId
                        }: {
     fullPath: string,
     collection: EntityCollection,
     filter?: FilterValues<any>,
-    sortBy?: [string, "asc" | "desc"]
+    sortBy?: [string, "asc" | "desc"],
+    sellerId?: string
 }) {
 
     const dataSource = useDataSource();
@@ -440,14 +451,24 @@ function EntitiesCount({
     const resolvedPath = useMemo(() => navigation.resolveAliasesFrom(fullPath), [fullPath, navigation.resolveAliasesFrom]);
 
     useEffect(() => {
+        const verifyCollection = collection.verifyCollection;
+
+        if (verifyCollection && !sellerId) {
+            setCount(0);
+            return;
+        };
+
+        const relationId = verifyCollection && sellerId ? sellerId : undefined;
+
         dataSource.countEntities({
             path: resolvedPath,
             collection,
             filter,
             orderBy: sortByProperty,
-            order: currentSort
+            order: currentSort,
+            relationId
         }).then(setCount).catch(setError);
-    }, [fullPath, dataSource, resolvedPath, collection, filter, sortByProperty, currentSort]);
+    }, [fullPath, dataSource, resolvedPath, collection, filter, sortByProperty, currentSort, sellerId]);
 
     if (error) {
         return null;

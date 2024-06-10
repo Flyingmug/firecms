@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 
-import { useCollectionFetch, useDataSource, useNavigationContext } from "../../../hooks";
+import { useAuthController, useCollectionFetch, useDataSource, useNavigationContext } from "../../../hooks";
 import { useDataOrder } from "../../../hooks/data/useDataOrder";
 import { Entity, EntityCollection, FilterValues, User } from "../../../types";
 import { useDebouncedData } from "./useDebouncedData";
@@ -57,6 +57,7 @@ export function useTableController<M extends Record<string, any> = any, UserType
 
     const navigation = useNavigationContext();
     const dataSource = useDataSource();
+    const authController = useAuthController();
     const resolvedPath = useMemo(() => navigation.resolveAliasesFrom(fullPath), [fullPath, navigation.resolveAliasesFrom]);
 
     const forceFilter = forceFilterFromProps ?? forceFilterFromCollection;
@@ -91,6 +92,14 @@ export function useTableController<M extends Record<string, any> = any, UserType
 
     const clearFilter = useCallback(() => setFilterValues(forceFilter ?? undefined), [forceFilter]);
 
+    const [sellerId, setSellerId] = React.useState<string>();
+
+    useEffect(() => {
+        if (collection.verifyCollection) {
+            setSellerId(authController.extra?.sellerId);
+        }
+    }, [collection, authController]);
+
     const {
         data: rawData,
         dataLoading,
@@ -102,7 +111,8 @@ export function useTableController<M extends Record<string, any> = any, UserType
         filterValues,
         sortBy,
         searchString,
-        itemCount
+        itemCount,
+        sellerId
     });
 
     const orderedData = useDataOrder({

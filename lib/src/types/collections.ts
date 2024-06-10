@@ -257,6 +257,8 @@ export interface EntityCollection<M extends Record<string, any> = any,
     formAutoSave?: boolean;
 
     additionalFormViews?: EntityFormCustomView[]; // bro will fix it after he does all the stuff
+
+    verifyCollection?: boolean;
 }
 
 /**

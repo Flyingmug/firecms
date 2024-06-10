@@ -26,6 +26,7 @@ import {
     deleteDoc,
     deleteField,
     doc,
+    documentId,
     DocumentReference,
     DocumentSnapshot,
     Firestore,
@@ -102,7 +103,8 @@ export function useFirestoreDataSource({
                                        order: "desc" | "asc" | undefined,
                                        startAfter: any[] | undefined,
                                        limit: number | undefined,
-                                       collectionGroup = false) => {
+                                       collectionGroup = false,
+                                       relationId: string | undefined) => {
 
         if (!firebaseApp) throw Error("useFirestoreDataSource Firebase not initialised");
 
@@ -117,6 +119,10 @@ export function useFirestoreDataSource({
                     const [op, value] = filterParameter as [WhereFilterOp, any];
                     queryParams.push(whereClause(key, op, cmsToFirestoreModel(value, firestore)));
                 });
+        }
+
+        if (relationId) {
+            queryParams.push(whereClause("sellerId", "==", relationId));
         }
 
         if (orderBy && order) {
@@ -217,7 +223,7 @@ export function useFirestoreDataSource({
                 order,
                 collectionGroup
             });
-            const query = buildQuery(path, filter, orderBy, order, startAfter, limit, collectionGroup);
+            const query = buildQuery(path, filter, orderBy, order, startAfter, limit, collectionGroup, undefined);
 
             return getDocs(query)
                 .then((snapshot) =>
@@ -259,6 +265,7 @@ export function useFirestoreDataSource({
                 order,
                 onUpdate,
                 onError,
+                relationId
             }: ListenCollectionProps<M>
         ): () => void => {
 
@@ -274,7 +281,7 @@ export function useFirestoreDataSource({
                 order
             });
 
-            const query = buildQuery(path, filter, orderBy, order, startAfter, limit, collectionGroup);
+            const query = buildQuery(path, filter, orderBy, order, startAfter, limit, collectionGroup, relationId);
 
             if (searchString) {
                 performTextSearch<M>(path, searchString)
@@ -470,15 +477,16 @@ export function useFirestoreDataSource({
             return doc(collectionClause(firestore, path)).id;
         }, [firebaseApp]),
 
-        countEntities: useCallback(async ({ path, collection, filter, order, orderBy }: {
+        countEntities: useCallback(async ({ path, collection, filter, order, orderBy, relationId }: {
             path: string,
             collection: EntityCollection<any>,
             filter?: FilterValues<Extract<keyof any, string>>,
             orderBy?: string,
             order?: "desc" | "asc",
+            relationId?: string
         }): Promise<number> => {
             if (!firebaseApp) throw Error("useFirestoreDataSource Firebase not initialised");
-            const query = buildQuery(path, filter, orderBy, order, undefined, undefined, collection.collectionGroup);
+            const query = buildQuery(path, filter, orderBy, order, undefined, undefined, collection.collectionGroup, relationId);
             const snapshot = await getCountFromServer(query);
             return snapshot.data().count;
         }, [firebaseApp]),

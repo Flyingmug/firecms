@@ -43,6 +43,7 @@ export type ListenCollectionProps<M extends Record<string, any> = any> =
     {
         onUpdate: (entities: Entity<M>[]) => void;
         onError?: (error: Error) => void;
+        relationId?: string;
     };
 
 /**
@@ -210,7 +211,12 @@ export interface DataSource {
     /**
      * Count the number of entities in a collection
      */
-    countEntities<M extends Record<string, any> = any>(props: FetchCollectionProps<M>): Promise<number>;
+    countEntities<M extends Record<string, any> = any>(
+        props: FetchCollectionProps<M>
+        & {
+            relationId?: string;
+        }
+    ): Promise<number>;
 
     /**
      * Check if the given filter combination is valid
